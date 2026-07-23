@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grocery List — Check &amp; Send</title>
+<style>
+  :root {
+    --page-bg: #ede7d6;
+    --card-bg: #fbf8ef;
+    --ink: #2b2a22;
+    --muted: #7c7563;
+    --accent: #3f6b4a;
+    --accent-contrast: #f3f8f1;
+    --accent-soft: #dde9db;
+    --line: #cfc6a9;
+    --danger: #b4483a;
+    --shadow: rgba(43, 42, 34, 0.14);
+
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page-bg: #16150f;
+      --card-bg: #211f17;
+      --ink: #ede7d3;
+      --muted: #9c9480;
+      --accent: #7fbe8c;
+      --accent-contrast: #10210f;
+      --accent-soft: #253327;
+      --line: #423e2e;
+      --danger: #d98a7c;
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --page-bg: #16150f;
+    --card-bg: #211f17;
+    --ink: #ede7d3;
+    --muted: #9c9480;
+    --accent: #7fbe8c;
+    --accent-contrast: #10210f;
+    --accent-soft: #253327;
+    --line: #423e2e;
+    --danger: #d98a7c;
+    --shadow: rgba(0, 0, 0, 0.4);
+  }
+  :root[data-theme="light"] {
+    --page-bg: #ede7d6;
+    --card-bg: #fbf8ef;
+    --ink: #2b2a22;
+    --muted: #7c7563;
+    --accent: #3f6b4a;
+    --accent-contrast: #f3f8f1;
+    --accent-soft: #dde9db;
+    --line: #cfc6a9;
+    --danger: #b4483a;
+    --shadow: rgba(43, 42, 34, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--page-bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    display: flex;
+    justify-content: center;
+    padding: clamp(1.25rem, 5vw, 3rem) 1rem;
+  }
+
+  .sheet {
+    width: min(440px, 100%);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tear {
+    height: 14px;
+    flex-shrink: 0;
+    background-image:
+      linear-gradient(135deg, var(--page-bg) 50%, transparent 50%),
+      linear-gradient(-135deg, var(--page-bg) 50%, transparent 50%);
+    background-size: 18px 28px;
+    background-repeat: repeat-x;
+  }
+  .tear--top { background-position: bottom; }
+  .tear--bottom { transform: rotate(180deg); }
+
+  .receipt {
+    background: var(--card-bg);
+    box-shadow: 0 12px 32px -16px var(--shadow);
+    padding: 1.6rem 1.5rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  header.title-block {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1.5px dashed var(--line);
+    margin: 0;
+  }
+
+  form.add-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .add-row input {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    padding: 0.6rem 0.7rem;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink);
+  }
+  .add-row input::placeholder { color: var(--muted); }
+  .add-row input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .add-row button {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.6rem 0.9rem;
+    border-radius: 6px;
+    border: 1.5px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    cursor: pointer;
+  }
+  .add-row button:hover { filter: brightness(1.06); }
+  .add-row button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  ul.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ul.list li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  ul.list li:last-child { border-bottom: none; }
+
+  .check {
+    flex-shrink: 0;
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 1.5px solid var(--muted);
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    padding: 0;
+  }
+  .check svg {
+    width: 0.8rem;
+    height: 0.8rem;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+  li.checked .check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  li.checked .check svg { opacity: 1; }
+  .check:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .item-name {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--ink);
+    cursor: pointer;
+    overflow-wrap: anywhere;
+    padding: 0;
+  }
+  li.checked .item-name {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--line);
+  }
+
+  .remove {
+    flex-shrink: 0;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-family: var(--font-ui);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .remove:hover { color: var(--danger); }
+  .remove:focus-visible { outline: 2px solid var(--danger); outline-offset: 1px; }
+
+  .empty {
+    padding: 1.4rem 0;
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+  }
+
+  .summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.65rem 0.8rem;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 1.5px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn:disabled:hover { border-color: var(--line); }
+
+  .btn--send {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-contrast);
+    flex: 1.4;
+    text-decoration: none;
+  }
+  .btn--send:hover:not(.is-disabled) { filter: brightness(1.06); }
+  .btn--send svg { width: 1rem; height: 1rem; }
+  .btn--send.is-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .barcode {
+    align-self: center;
+    height: 26px;
+    width: 68%;
+    margin-top: 0.2rem;
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--ink) 0px, var(--ink) 2px,
+      transparent 2px, transparent 3px,
+      var(--ink) 3px, var(--ink) 4px,
+      transparent 4px, transparent 7px,
+      var(--ink) 7px, var(--ink) 9px,
+      transparent 9px, transparent 11px
+    );
+    opacity: 0.55;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="tear tear--top"></div>
+    <main class="receipt">
+      <header class="title-block">
+        <h1>Grocery List</h1>
+        <p class="subtitle" id="today"></p>
+      </header>
+
+      <hr class="divider" />
+
+      <form class="add-row" id="add-form">
+        <label for="item-input" class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Add item</label>
+        <input id="item-input" type="text" placeholder="Add an item…" autocomplete="off" maxlength="80" />
+        <button type="submit">Add</button>
+      </form>
+
+      <hr class="divider" />
+
+      <ul class="list" id="list" aria-live="polite"></ul>
+      <p class="empty" id="empty-state" hidden>Your list is empty — add something to pick up.</p>
+
+      <hr class="divider" />
+
+      <p class="summary">
+        <span id="summary-text">0 items</span>
+      </p>
+
+      <div class="actions">
+        <button class="btn" id="clear-btn" type="button">Clear checked</button>
+        <a class="btn btn--send is-disabled" id="send-btn" href="#" target="_blank" rel="noopener noreferrer" aria-disabled="true" tabindex="-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Send via WhatsApp
+        </a>
+      </div>
+
+      <div class="barcode" aria-hidden="true"></div>
+    </main>
+    <div class="tear tear--bottom"></div>
+  </div>
+
+<script>
+  const STORAGE_KEY = "grocery-list-items-v1";
+
+  const listEl = document.getElementById("list");
+  const emptyEl = document.getElementById("empty-state");
+  const formEl = document.getElementById("add-form");
+  const inputEl = document.getElementById("item-input");
+  const summaryEl = document.getElementById("summary-text");
+  const clearBtn = document.getElementById("clear-btn");
+  const sendBtn = document.getElementById("send-btn");
+  const todayEl = document.getElementById("today");
+
+  todayEl.textContent = new Date().toLocaleDateString(undefined, {
+    weekday: "short", month: "short", day: "numeric"
+  });
+
+  function loadItems() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveItems() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+
+  function makeId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  let items = loadItems();
+
+  function render() {
+    listEl.textContent = "";
+    emptyEl.hidden = items.length !== 0;
+
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.className = item.checked ? "checked" : "";
+      li.dataset.id = item.id;
+
+      const checkBtn = document.createElement("button");
+      checkBtn.type = "button";
+      checkBtn.className = "check";
+      checkBtn.setAttribute("aria-pressed", String(item.checked));
+      checkBtn.setAttribute("aria-label", `Mark ${item.name} as ${item.checked ? "not picked up" : "picked up"}`);
+      checkBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+      checkBtn.style.color = "var(--accent-contrast)";
+      checkBtn.addEventListener("click", () => toggleItem(item.id));
+
+      const nameBtn = document.createElement("button");
+      nameBtn.type = "button";
+      nameBtn.className = "item-name";
+      nameBtn.textContent = item.name;
+      nameBtn.addEventListener("click", () => toggleItem(item.id));
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "remove";
+      removeBtn.setAttribute("aria-label", `Remove ${item.name}`);
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", () => removeItem(item.id));
+
+      li.append(checkBtn, nameBtn, removeBtn);
+      listEl.appendChild(li);
+    }
+
+    const checkedCount = items.filter(i => i.checked).length;
+    summaryEl.textContent = items.length === 0
+      ? "0 items"
+      : `${items.length} item${items.length === 1 ? "" : "s"} · ${checkedCount} checked`;
+
+    clearBtn.disabled = checkedCount === 0;
+
+    if (items.length === 0) {
+      sendBtn.href = "#";
+      sendBtn.classList.add("is-disabled");
+      sendBtn.setAttribute("aria-disabled", "true");
+      sendBtn.tabIndex = -1;
+    } else {
+      sendBtn.href = `https://wa.me/?text=${encodeURIComponent(buildMessage())}`;
+      sendBtn.classList.remove("is-disabled");
+      sendBtn.removeAttribute("aria-disabled");
+      sendBtn.removeAttribute("tabindex");
+    }
+  }
+
+  function buildMessage() {
+    const dateStr = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const lines = items.map(i => `${i.checked ? "✔" : "▢"} ${i.name}`);
+    const checkedCount = items.filter(i => i.checked).length;
+    return [
+      `🧾 GROCERY LIST — ${dateStr}`,
+      "------------------------",
+      ...lines,
+      "------------------------",
+      `${checkedCount} of ${items.length} picked up`
+    ].join("\n");
+  }
+
+  function toggleItem(id) {
+    const item = items.find(i => i.id === id);
+    if (item) item.checked = !item.checked;
+    saveItems();
+    render();
+  }
+
+  function removeItem(id) {
+    items = items.filter(i => i.id !== id);
+    saveItems();
+    render();
+  }
+
+  formEl.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = inputEl.value.trim();
+    if (!name) return;
+    items.push({ id: makeId(), name, checked: false });
+    saveItems();
+    render();
+    inputEl.value = "";
+    inputEl.focus();
+  });
+
+  clearBtn.addEventListener("click", () => {
+    items = items.filter(i => !i.checked);
+    saveItems();
+    render();
+  });
+
+  sendBtn.addEventListener("click", (e) => {
+    if (sendBtn.classList.contains("is-disabled")) e.preventDefault();
+  });
+
+  render();
+</script>
+</body>
+</html>

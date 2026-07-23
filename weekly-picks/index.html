@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Weekly Picks — 2026 NFL Season</title>
+<style>
+  :root {
+    --bg: #0d1218;
+    --panel: #161d26;
+    --panel-raised: #1c2530;
+    --ink: #f0f3ee;
+    --muted: #8b96a3;
+    --accent: #c9a227;
+    --accent-contrast: #17130a;
+    --accent-soft: #382c10;
+    --line: #2a323c;
+    --danger: #c4573f;
+    --danger-soft: #34201a;
+
+    --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 50% -10%, #1a2432 0%, var(--bg) 55%);
+    color: var(--ink);
+    font-family: var(--font-display);
+    display: flex;
+    justify-content: center;
+    padding: clamp(1rem, 4vw, 2.5rem) 1rem;
+  }
+
+  .board {
+    width: min(480px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .scoreboard-header {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .brand-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    box-shadow: 0 0 8px 1px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .brand .season {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .week-nav {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .week-nav button {
+    width: 2.6rem;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    background: var(--panel-raised);
+    color: var(--ink);
+    border-radius: 8px;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .week-nav button:hover { border-color: var(--accent); color: var(--accent); }
+  .week-nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .week-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .week-nav button:disabled:hover { border-color: var(--line); color: var(--ink); }
+
+  .week-select-wrap {
+    flex: 1;
+    position: relative;
+  }
+  .week-select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 0.9rem;
+    top: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+  }
+  select#week-select {
+    width: 100%;
+    height: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--panel-raised);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.5rem 2.2rem 0.5rem 0.8rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+  }
+  select#week-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .week-dates {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .tally {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.35rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.6rem;
+  }
+  .tally-count {
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .tally-slash {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+  .tally-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-left: 0.3rem;
+  }
+
+  .matchups {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .game {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.55rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .game-loc {
+    align-self: center;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+  }
+
+  .game-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+
+  .team-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.5rem;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel-raised);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    text-align: center;
+  }
+  .team-btn .mark {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex-shrink: 0;
+    opacity: 0;
+  }
+  .team-btn.selected {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .team-btn.selected .mark { opacity: 1; }
+  .team-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .team-btn:disabled:not(.selected) {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .at-sep {
+    align-self: center;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.7rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn--danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  .btn--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-contrast);
+    flex: 1.5;
+  }
+  .btn--primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn--primary svg { width: 1rem; height: 1rem; }
+  .btn--primary:disabled {
+    opacity: 0.4;
+    background: var(--panel-raised);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="board">
+    <header class="scoreboard-header">
+      <div class="brand">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <h1>Weekly Picks</h1>
+        <span class="season">2026</span>
+      </div>
+      <div class="week-nav">
+        <button type="button" id="prev-week" aria-label="Previous week">‹</button>
+        <div class="week-select-wrap">
+          <select id="week-select" aria-label="Select week"></select>
+        </div>
+        <button type="button" id="next-week" aria-label="Next week">›</button>
+      </div>
+      <p class="week-dates" id="week-dates"></p>
+    </header>
+
+    <div class="tally">
+      <span class="tally-count" id="tally-count">0</span><span class="tally-slash">/&nbsp;4</span>
+      <span class="tally-label">picked</span>
+    </div>
+
+    <ul class="matchups" id="matchups"></ul>
+
+    <div class="actions">
+      <button class="btn btn--danger" id="clear-btn" type="button">Clear week</button>
+      <button class="btn btn--primary" id="copy-btn" type="button" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span id="copy-btn-label">Copy picks</span>
+      </button>
+    </div>
+  </div>
+
+<script>
+  const SCHEDULE = {
+    1:  { dates: "Sep 9–14",  games: [["Patriots","Seahawks"],["49ers","Rams","MELBOURNE"],["Bears","Panthers"],["Buccaneers","Bengals"],["Ravens","Colts"],["Bills","Texans"],["Saints","Lions"],["Jets","Titans"],["Falcons","Steelers"],["Browns","Jaguars"],["Cardinals","Chargers"],["Packers","Vikings"],["Dolphins","Raiders"],["Commanders","Eagles"],["Cowboys","Giants"],["Broncos","Chiefs"]] },
+    2:  { dates: "Sep 17–21", games: [["Lions","Bills"],["Vikings","Bears"],["Eagles","Titans"],["Packers","Jets"],["Panthers","Falcons"],["Saints","Ravens"],["Bengals","Texans"],["Browns","Buccaneers"],["Steelers","Patriots"],["Raiders","Chargers"],["Jaguars","Broncos"],["Commanders","Cowboys"],["Seahawks","Cardinals"],["Dolphins","49ers"],["Colts","Chiefs"],["Giants","Rams"]] },
+    3:  { dates: "Sep 24–28", games: [["Falcons","Packers"],["Chiefs","Dolphins"],["Texans","Colts"],["Titans","Giants"],["Patriots","Jaguars"],["Bengals","Steelers"],["Panthers","Browns"],["Jets","Lions"],["Seahawks","Commanders"],["Chargers","Bills"],["Vikings","Buccaneers"],["Cardinals","49ers"],["Ravens","Cowboys","RIO DE JANEIRO"],["Raiders","Saints"],["Rams","Broncos"],["Eagles","Bears"]] },
+    4:  { dates: "Oct 1–5",   games: [["Steelers","Browns"],["Colts","Commanders","LONDON"],["Titans","Ravens"],["Cardinals","Giants"],["Jaguars","Bengals"],["Patriots","Bills"],["Cowboys","Texans"],["Rams","Eagles"],["Packers","Buccaneers"],["Jets","Bears"],["Dolphins","Vikings"],["Broncos","49ers"],["Chargers","Seahawks"],["Chiefs","Raiders"],["Lions","Panthers"],["Falcons","Saints"]] },
+    5:  { dates: "Oct 8–12",  games: [["Buccaneers","Cowboys"],["Eagles","Jaguars","LONDON"],["Raiders","Patriots"],["Texans","Titans"],["Browns","Jets"],["Colts","Steelers"],["Bengals","Dolphins"],["Vikings","Saints"],["Giants","Commanders"],["Broncos","Chargers"],["Bears","Packers"],["Lions","Cardinals"],["49ers","Seahawks"],["Ravens","Falcons"],["Bills","Rams"]] },
+    6:  { dates: "Oct 15–19", games: [["Seahawks","Broncos"],["Texans","Jaguars","LONDON"],["Jets","Patriots"],["Steelers","Buccaneers"],["Panthers","Eagles"],["Bears","Falcons"],["Titans","Colts"],["Saints","Giants"],["Ravens","Browns"],["Cardinals","Rams"],["Chargers","Chiefs"],["Bills","Raiders"],["Cowboys","Packers"],["Commanders","49ers"]] },
+    7:  { dates: "Oct 22–26", games: [["Patriots","Bears"],["Steelers","Saints","PARIS"],["Browns","Titans"],["Dolphins","Jets"],["Colts","Vikings"],["Bengals","Ravens"],["Giants","Texans"],["Buccaneers","Panthers"],["49ers","Falcons"],["Broncos","Cardinals"],["Rams","Raiders"],["Packers","Lions"],["Chiefs","Seahawks"],["Cowboys","Eagles"]] },
+    8:  { dates: "Oct 29–Nov 2", games: [["Panthers","Packers"],["Titans","Bengals"],["Colts","Jaguars"],["Browns","Steelers"],["Ravens","Bills"],["Falcons","Buccaneers"],["Vikings","Lions"],["Cardinals","Cowboys"],["Raiders","Jets"],["Chargers","Rams"],["Chiefs","Broncos"],["Patriots","Dolphins"],["Eagles","Commanders"],["Bears","Seahawks"]] },
+    9:  { dates: "Nov 5–9",   games: [["Jaguars","Ravens"],["Bengals","Falcons","MADRID"],["Jets","Chiefs"],["Browns","Saints"],["Broncos","Panthers"],["Cowboys","Colts"],["Lions","Dolphins"],["Giants","Eagles"],["Rams","Commanders"],["Raiders","49ers"],["Texans","Chargers"],["Cardinals","Seahawks"],["Packers","Patriots"],["Buccaneers","Bears"],["Bills","Vikings"]] },
+    10: { dates: "Nov 12–16", games: [["Commanders","Giants"],["Patriots","Lions","MUNICH"],["Bills","Jets"],["Dolphins","Colts"],["Chiefs","Falcons"],["Vikings","Packers"],["Jaguars","Titans"],["Texans","Browns"],["Panthers","Saints"],["Rams","Cardinals"],["Seahawks","Raiders"],["49ers","Cowboys"],["Steelers","Bengals"],["Chargers","Ravens"]] },
+    11: { dates: "Nov 19–23", games: [["Colts","Texans"],["Cardinals","Chiefs"],["Buccaneers","Lions"],["Jaguars","Giants"],["Dolphins","Bills"],["Titans","Cowboys"],["Ravens","Panthers"],["Saints","Bears"],["Jets","Chargers"],["Steelers","Eagles"],["Raiders","Broncos"],["Vikings","49ers","MEXICO CITY"],["Bengals","Commanders"]] },
+    12: { dates: "Nov 25–30", games: [["Packers","Rams"],["Bears","Lions"],["Eagles","Cowboys"],["Chiefs","Bills"],["Broncos","Steelers"],["Ravens","Texans"],["Saints","Bengals"],["Jets","Dolphins"],["Falcons","Vikings"],["Giants","Colts"],["Raiders","Browns"],["Titans","Jaguars"],["Commanders","Cardinals"],["Seahawks","49ers"],["Patriots","Chargers"],["Panthers","Buccaneers"]] },
+    13: { dates: "Dec 3–7",   games: [["Chiefs","Rams"],["Lions","Falcons"],["Chargers","Buccaneers"],["Commanders","Titans"],["Bengals","Browns"],["49ers","Giants"],["Packers","Saints"],["Jaguars","Bears"],["Eagles","Cardinals"],["Dolphins","Broncos"],["Panthers","Vikings"],["Bills","Patriots"],["Texans","Steelers"],["Cowboys","Seahawks"]] },
+    14: { dates: "Dec 10–14", games: [["Vikings","Patriots"],["Broncos","Jets"],["Falcons","Browns"],["Bears","Dolphins"],["Texans","Commanders"],["Saints","Panthers"],["Colts","Eagles"],["Buccaneers","Ravens"],["Titans","Lions"],["Chargers","Raiders"],["Chiefs","Bengals"],["Rams","49ers"],["Giants","Seahawks"],["Bills","Packers"],["Steelers","Jaguars"]] },
+    15: { dates: "Dec 17–21", games: [["49ers","Chargers"],["Seahawks","Eagles"],["Bears","Bills"],["Jaguars","Texans"],["Ravens","Steelers"],["Browns","Giants"],["Colts","Titans"],["Dolphins","Packers"],["Saints","Buccaneers"],["Bengals","Panthers"],["Falcons","Commanders"],["Jets","Cardinals"],["Cowboys","Rams"],["Broncos","Raiders"],["Lions","Vikings"],["Patriots","Chiefs"]] },
+    16: { dates: "Dec 24–28", games: [["Texans","Eagles"],["Packers","Bears"],["Bills","Broncos"],["Rams","Seahawks"],["Saints","Titans"],["Buccaneers","Falcons"],["Commanders","Vikings"],["Panthers","Steelers"],["Bengals","Colts"],["Patriots","Jets"],["Browns","Ravens"],["Chargers","Dolphins"],["Cardinals","Raiders"],["49ers","Chiefs"],["Jaguars","Cowboys"],["Giants","Lions"]] },
+    17: { dates: "Dec 31–Jan 4", games: [["Ravens","Bengals"],["Rams","Buccaneers"],["Broncos","Patriots"],["Chiefs","Chargers"],["Commanders","Jaguars"],["Bills","Dolphins"],["Steelers","Titans"],["Vikings","Jets"],["Saints","Falcons"],["Seahawks","Panthers"],["Colts","Browns"],["Giants","Cowboys"],["Raiders","Cardinals"],["Lions","Bears"],["Eagles","49ers"],["Texans","Packers"]] },
+    18: { dates: "Jan 9–10",  games: [["Jets","Bills"],["Jaguars","Colts"],["Raiders","Chiefs"],["Titans","Texans"],["Chargers","Broncos"],["Dolphins","Patriots"],["Browns","Bengals"],["Steelers","Ravens"],["Bears","Vikings"],["Lions","Packers"],["Cowboys","Commanders"],["Buccaneers","Saints"],["Eagles","Giants"],["Seahawks","Rams"],["Falcons","Panthers"],["49ers","Cardinals"]] }
+  };
+
+  const STORAGE_KEY = "weekly-picks-v1";
+  const MAX_PICKS = 4;
+  const TOTAL_WEEKS = 18;
+
+  const weekSelect = document.getElementById("week-select");
+  const prevBtn = document.getElementById("prev-week");
+  const nextBtn = document.getElementById("next-week");
+  const weekDatesEl = document.getElementById("week-dates");
+  const matchupsEl = document.getElementById("matchups");
+  const tallyCountEl = document.getElementById("tally-count");
+  const clearBtn = document.getElementById("clear-btn");
+  const copyBtn = document.getElementById("copy-btn");
+  const copyBtnLabel = document.getElementById("copy-btn-label");
+  let copyResetTimer = null;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  let state = loadState();
+  let currentWeek = 1;
+
+  for (let w = 1; w <= TOTAL_WEEKS; w++) {
+    const opt = document.createElement("option");
+    opt.value = String(w);
+    opt.textContent = `Week ${w} · ${SCHEDULE[w].dates}`;
+    weekSelect.appendChild(opt);
+  }
+
+  function getPicks(week) {
+    return state[week] || [];
+  }
+
+  function setPicks(week, picks) {
+    if (picks.length === 0) {
+      delete state[week];
+    } else {
+      state[week] = picks;
+    }
+    saveState();
+  }
+
+  function toggleTeam(week, team) {
+    const picks = getPicks(week).slice();
+    const idx = picks.indexOf(team);
+    if (idx !== -1) {
+      picks.splice(idx, 1);
+    } else if (picks.length < MAX_PICKS) {
+      picks.push(team);
+    } else {
+      return;
+    }
+    setPicks(week, picks);
+    render();
+  }
+
+  function buildMessage(week) {
+    const picks = getPicks(week);
+    const info = SCHEDULE[week];
+    const lines = picks.map((t, i) => `${i + 1}. ${t}`);
+    return [
+      `🏈 Week ${week} Picks (${info.dates})`,
+      ...lines
+    ].join("\n");
+  }
+
+  function render() {
+    weekSelect.value = String(currentWeek);
+    prevBtn.disabled = currentWeek === 1;
+    nextBtn.disabled = currentWeek === TOTAL_WEEKS;
+
+    const info = SCHEDULE[currentWeek];
+    weekDatesEl.textContent = info.dates + ", 2026";
+
+    const picks = getPicks(currentWeek);
+
+    matchupsEl.textContent = "";
+    for (const game of info.games) {
+      const [away, home, loc] = game;
+
+      const li = document.createElement("li");
+      li.className = "game";
+
+      if (loc) {
+        const locEl = document.createElement("span");
+        locEl.className = "game-loc";
+        locEl.textContent = loc;
+        li.appendChild(locEl);
+      }
+
+      const row = document.createElement("div");
+      row.className = "game-row";
+
+      function makeTeamBtn(team) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        const isSelected = picks.includes(team);
+        btn.className = "team-btn" + (isSelected ? " selected" : "");
+        btn.disabled = !isSelected && picks.length >= MAX_PICKS;
+        btn.innerHTML = `<svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>${team}</span>`;
+        btn.setAttribute("aria-pressed", String(isSelected));
+        btn.addEventListener("click", () => toggleTeam(currentWeek, team));
+        return btn;
+      }
+
+      const awayBtn = makeTeamBtn(away);
+      const sep = document.createElement("span");
+      sep.className = "at-sep";
+      sep.textContent = loc ? "vs" : "@";
+      const homeBtn = makeTeamBtn(home);
+
+      row.append(awayBtn, sep, homeBtn);
+      li.appendChild(row);
+      matchupsEl.appendChild(li);
+    }
+
+    tallyCountEl.textContent = String(picks.length);
+    copyBtn.disabled = picks.length === 0;
+  }
+
+  weekSelect.addEventListener("change", () => {
+    currentWeek = Number(weekSelect.value);
+    render();
+  });
+
+  prevBtn.addEventListener("click", () => {
+    if (currentWeek > 1) { currentWeek--; render(); }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentWeek < TOTAL_WEEKS) { currentWeek++; render(); }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    setPicks(currentWeek, []);
+    render();
+  });
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  copyBtn.addEventListener("click", async () => {
+    if (copyBtn.disabled) return;
+    const ok = await copyText(buildMessage(currentWeek));
+    clearTimeout(copyResetTimer);
+    copyBtnLabel.textContent = ok ? "Copied ✓" : "Couldn't copy";
+    copyResetTimer = setTimeout(() => { copyBtnLabel.textContent = "Copy picks"; }, 1500);
+  });
+
+  render();
+</script>
+</body>
+</html>

@@ -706,17 +706,22 @@
     copyBtn.disabled = picks.length === 0;
   }
 
-  weekSelect.addEventListener("change", () => {
-    currentWeek = Number(weekSelect.value);
+  function goToWeek(week) {
+    currentWeek = week;
+    setWeekData(currentWeek, { picks: [], special: null });
     render();
+  }
+
+  weekSelect.addEventListener("change", () => {
+    goToWeek(Number(weekSelect.value));
   });
 
   prevBtn.addEventListener("click", () => {
-    if (currentWeek > 1) { currentWeek--; render(); }
+    if (currentWeek > 1) goToWeek(currentWeek - 1);
   });
 
   nextBtn.addEventListener("click", () => {
-    if (currentWeek < TOTAL_WEEKS) { currentWeek++; render(); }
+    if (currentWeek < TOTAL_WEEKS) goToWeek(currentWeek + 1);
   });
 
   clearBtn.addEventListener("click", () => {

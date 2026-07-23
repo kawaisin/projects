@@ -503,6 +503,14 @@
     saveState();
   }
 
+  function getOpponent(week, team) {
+    for (const [away, home] of SCHEDULE[week].games) {
+      if (away === team) return home;
+      if (home === team) return away;
+    }
+    return null;
+  }
+
   function toggleTeam(week, team) {
     const data = getWeekData(week);
     const picks = data.picks.slice();
@@ -512,6 +520,8 @@
       picks.splice(idx, 1);
       if (special === team) special = null;
     } else if (picks.length < MAX_PICKS) {
+      const opponent = getOpponent(week, team);
+      if (opponent && picks.includes(opponent)) return;
       picks.push(team);
     } else {
       return;
@@ -606,13 +616,13 @@
       const row = document.createElement("div");
       row.className = "game-row";
 
-      function makeTeamBtn(team) {
+      function makeTeamBtn(team, opponent) {
         const btn = document.createElement("button");
         btn.type = "button";
         const isSelected = picks.includes(team);
         const isSpecial = team === special;
         btn.className = "team-btn" + (isSelected ? " selected" : "") + (isSpecial ? " special" : "");
-        btn.disabled = !isSelected && picks.length >= MAX_PICKS;
+        btn.disabled = !isSelected && (picks.length >= MAX_PICKS || picks.includes(opponent));
         const icon = isSpecial ? starIcon(true, "mark") : CHECK_ICON;
         btn.innerHTML = `${icon}<span>${team}</span>`;
         btn.setAttribute("aria-pressed", String(isSelected));
@@ -620,11 +630,11 @@
         return btn;
       }
 
-      const awayBtn = makeTeamBtn(away);
+      const awayBtn = makeTeamBtn(away, home);
       const sep = document.createElement("span");
       sep.className = "at-sep";
       sep.textContent = loc ? "vs" : "@";
-      const homeBtn = makeTeamBtn(home);
+      const homeBtn = makeTeamBtn(home, away);
 
       row.append(awayBtn, sep, homeBtn);
       li.appendChild(row);

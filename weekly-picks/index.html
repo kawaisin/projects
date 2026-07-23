@@ -14,6 +14,9 @@
     --accent: #c9a227;
     --accent-contrast: #17130a;
     --accent-soft: #382c10;
+    --special: #4fb6e8;
+    --special-contrast: #071822;
+    --special-soft: #14303d;
     --line: #2a323c;
     --danger: #c4573f;
     --danger-soft: #34201a;
@@ -177,6 +180,72 @@
     margin-left: 0.3rem;
   }
 
+  .picks-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.7rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .picks-panel-label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .picks-panel-label.needs-special { color: var(--special); }
+
+  .picks-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .pick-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.4rem 0.4rem 0.4rem 0.65rem;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel-raised);
+  }
+  .pick-row.special {
+    border-color: var(--special);
+    background: var(--special-soft);
+  }
+  .pick-row-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+  .pick-row.special .pick-row-name { color: var(--special); }
+
+  .star-btn {
+    flex-shrink: 0;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: grid;
+    place-items: center;
+    border: none;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .star-btn svg { width: 1.1rem; height: 1.1rem; }
+  .star-btn.active { color: var(--special); }
+  .star-btn:hover { color: var(--special); }
+  .star-btn:focus-visible { outline: 2px solid var(--special); outline-offset: 2px; }
+
   .matchups {
     list-style: none;
     margin: 0;
@@ -244,6 +313,11 @@
     color: var(--accent);
   }
   .team-btn.selected .mark { opacity: 1; }
+  .team-btn.selected.special {
+    background: var(--special-soft);
+    border-color: var(--special);
+    color: var(--special);
+  }
   .team-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .team-btn:disabled:not(.selected) {
     opacity: 0.35;
@@ -330,6 +404,11 @@
       <span class="tally-label">picked</span>
     </div>
 
+    <div class="picks-panel" id="picks-panel" hidden>
+      <p class="picks-panel-label" id="picks-panel-label"></p>
+      <ul class="picks-list" id="picks-list"></ul>
+    </div>
+
     <ul class="matchups" id="matchups"></ul>
 
     <div class="actions">
@@ -374,6 +453,9 @@
   const prevBtn = document.getElementById("prev-week");
   const nextBtn = document.getElementById("next-week");
   const weekDatesEl = document.getElementById("week-dates");
+  const picksPanelEl = document.getElementById("picks-panel");
+  const picksPanelLabelEl = document.getElementById("picks-panel-label");
+  const picksListEl = document.getElementById("picks-list");
   const matchupsEl = document.getElementById("matchups");
   const tallyCountEl = document.getElementById("tally-count");
   const clearBtn = document.getElementById("clear-btn");
@@ -405,37 +487,61 @@
     weekSelect.appendChild(opt);
   }
 
-  function getPicks(week) {
-    return state[week] || [];
+  function getWeekData(week) {
+    const raw = state[week];
+    if (!raw) return { picks: [], special: null };
+    if (Array.isArray(raw)) return { picks: raw, special: null };
+    return { picks: raw.picks || [], special: raw.special || null };
   }
 
-  function setPicks(week, picks) {
+  function setWeekData(week, { picks, special }) {
     if (picks.length === 0) {
       delete state[week];
     } else {
-      state[week] = picks;
+      state[week] = { picks, special: special && picks.includes(special) ? special : null };
     }
     saveState();
   }
 
   function toggleTeam(week, team) {
-    const picks = getPicks(week).slice();
+    const data = getWeekData(week);
+    const picks = data.picks.slice();
+    let special = data.special;
     const idx = picks.indexOf(team);
     if (idx !== -1) {
       picks.splice(idx, 1);
+      if (special === team) special = null;
     } else if (picks.length < MAX_PICKS) {
       picks.push(team);
     } else {
       return;
     }
-    setPicks(week, picks);
+    setWeekData(week, { picks, special });
     render();
   }
 
+  function toggleSpecial(week, team) {
+    const data = getWeekData(week);
+    if (!data.picks.includes(team)) return;
+    const special = data.special === team ? null : team;
+    setWeekData(week, { picks: data.picks, special });
+    render();
+  }
+
+  const CHECK_ICON = `<svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  const STAR_PATH = "M12 2.5l2.85 6.32 6.9.62-5.23 4.56 1.58 6.8L12 17.05l-6.1 3.75 1.58-6.8-5.23-4.56 6.9-.62L12 2.5z";
+
+  function starIcon(filled, extraClass) {
+    const fillAttrs = filled
+      ? 'fill="currentColor" stroke="none"'
+      : 'fill="none" stroke="currentColor" stroke-width="2"';
+    return `<svg class="${extraClass || ""}" viewBox="0 0 24 24" ${fillAttrs} stroke-linejoin="round"><path d="${STAR_PATH}"></path></svg>`;
+  }
+
   function buildMessage(week) {
-    const picks = getPicks(week);
+    const { picks, special } = getWeekData(week);
     const info = SCHEDULE[week];
-    const lines = picks.map((t, i) => `${i + 1}. ${t}`);
+    const lines = picks.map((t, i) => `${i + 1}. ${t}${t === special ? " ⭐ Star Pick" : ""}`);
     return [
       `🏈 Week ${week} Picks (${info.dates})`,
       ...lines
@@ -450,7 +556,38 @@
     const info = SCHEDULE[currentWeek];
     weekDatesEl.textContent = info.dates + ", 2026";
 
-    const picks = getPicks(currentWeek);
+    const { picks, special } = getWeekData(currentWeek);
+
+    picksPanelEl.hidden = picks.length === 0;
+    if (picks.length > 0) {
+      const needsSpecial = picks.length === MAX_PICKS && !special;
+      picksPanelLabelEl.textContent = needsSpecial
+        ? "Tap ★ to choose your Star Pick"
+        : "Your picks — tap ★ to change your Star Pick";
+      picksPanelLabelEl.classList.toggle("needs-special", needsSpecial);
+
+      picksListEl.textContent = "";
+      for (const team of picks) {
+        const isSpecial = team === special;
+        const li = document.createElement("li");
+        li.className = "pick-row" + (isSpecial ? " special" : "");
+
+        const name = document.createElement("span");
+        name.className = "pick-row-name";
+        name.textContent = team;
+
+        const starBtn = document.createElement("button");
+        starBtn.type = "button";
+        starBtn.className = "star-btn" + (isSpecial ? " active" : "");
+        starBtn.setAttribute("aria-pressed", String(isSpecial));
+        starBtn.setAttribute("aria-label", isSpecial ? `Remove ${team} as Star Pick` : `Set ${team} as Star Pick`);
+        starBtn.innerHTML = starIcon(isSpecial);
+        starBtn.addEventListener("click", () => toggleSpecial(currentWeek, team));
+
+        li.append(name, starBtn);
+        picksListEl.appendChild(li);
+      }
+    }
 
     matchupsEl.textContent = "";
     for (const game of info.games) {
@@ -473,9 +610,11 @@
         const btn = document.createElement("button");
         btn.type = "button";
         const isSelected = picks.includes(team);
-        btn.className = "team-btn" + (isSelected ? " selected" : "");
+        const isSpecial = team === special;
+        btn.className = "team-btn" + (isSelected ? " selected" : "") + (isSpecial ? " special" : "");
         btn.disabled = !isSelected && picks.length >= MAX_PICKS;
-        btn.innerHTML = `<svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>${team}</span>`;
+        const icon = isSpecial ? starIcon(true, "mark") : CHECK_ICON;
+        btn.innerHTML = `${icon}<span>${team}</span>`;
         btn.setAttribute("aria-pressed", String(isSelected));
         btn.addEventListener("click", () => toggleTeam(currentWeek, team));
         return btn;
@@ -510,7 +649,7 @@
   });
 
   clearBtn.addEventListener("click", () => {
-    setPicks(currentWeek, []);
+    setWeekData(currentWeek, { picks: [], special: null });
     render();
   });
 

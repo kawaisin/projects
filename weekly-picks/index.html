@@ -210,6 +210,9 @@
     flex-direction: column;
     gap: 0.5rem;
   }
+  .picks-panel[hidden] {
+    display: none;
+  }
   .picks-panel-label {
     margin: 0;
     font-family: var(--font-mono);
@@ -649,6 +652,10 @@
     const { picks, special } = getWeekData(currentWeek);
 
     picksPanelEl.hidden = picks.length === 0;
+    picksListEl.textContent = "";
+    picksPanelLabelEl.textContent = "";
+    picksPanelLabelEl.classList.remove("needs-special");
+
     if (picks.length > 0) {
       const needsSpecial = picks.length === MAX_PICKS && !special;
       picksPanelLabelEl.textContent = needsSpecial
@@ -656,7 +663,6 @@
         : "Your picks — tap 🔒 to change your Locked Pick";
       picksPanelLabelEl.classList.toggle("needs-special", needsSpecial);
 
-      picksListEl.textContent = "";
       for (const team of picks) {
         const isSpecial = team === special;
         const li = document.createElement("li");

@@ -247,7 +247,7 @@
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
   }
 
-  .star-btn {
+  .lock-btn {
     flex-shrink: 0;
     width: 2.1rem;
     height: 2.1rem;
@@ -259,10 +259,10 @@
     cursor: pointer;
     border-radius: 6px;
   }
-  .star-btn svg { width: 1.1rem; height: 1.1rem; }
-  .star-btn.active { color: var(--special); }
-  .star-btn:hover { color: var(--special); }
-  .star-btn:focus-visible { outline: 2px solid var(--special); outline-offset: 2px; }
+  .lock-btn svg { width: 1.1rem; height: 1.1rem; }
+  .lock-btn.active { color: var(--special); }
+  .lock-btn:hover { color: var(--special); }
+  .lock-btn:focus-visible { outline: 2px solid var(--special); outline-offset: 2px; }
 
   .matchups {
     list-style: none;
@@ -600,19 +600,17 @@
   }
 
   const CHECK_ICON = `<svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-  const STAR_PATH = "M12 2.5l2.85 6.32 6.9.62-5.23 4.56 1.58 6.8L12 17.05l-6.1 3.75 1.58-6.8-5.23-4.56 6.9-.62L12 2.5z";
-
-  function starIcon(filled, extraClass) {
-    const fillAttrs = filled
-      ? 'fill="currentColor" stroke="none"'
-      : 'fill="none" stroke="currentColor" stroke-width="2"';
-    return `<svg class="${extraClass || ""}" viewBox="0 0 24 24" ${fillAttrs} stroke-linejoin="round"><path d="${STAR_PATH}"></path></svg>`;
+  function lockIcon(locked, extraClass) {
+    const shackle = locked
+      ? '<path d="M7.5 11V7a4.5 4.5 0 0 1 9 0v4"></path>'
+      : '<path d="M7.5 11V7a4.5 4.5 0 0 1 8.9-1.2"></path>';
+    return `<svg class="${extraClass || ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"></rect>${shackle}</svg>`;
   }
 
   function buildMessage(week) {
     const { picks, special } = getWeekData(week);
     const info = SCHEDULE[week];
-    const lines = picks.map((t, i) => `${i + 1}. ${t}${t === special ? " ⭐ Locked Pick" : ""}`);
+    const lines = picks.map((t, i) => `${i + 1}. ${t}${t === special ? " 🔒 Locked Pick" : ""}`);
     return [
       `🏈 Week ${week} Picks (${info.dates})`,
       ...lines
@@ -633,8 +631,8 @@
     if (picks.length > 0) {
       const needsSpecial = picks.length === MAX_PICKS && !special;
       picksPanelLabelEl.textContent = needsSpecial
-        ? "Tap ★ to choose your Locked Pick"
-        : "Your picks — tap ★ to change your Locked Pick";
+        ? "Tap 🔒 to choose your Locked Pick"
+        : "Your picks — tap 🔒 to change your Locked Pick";
       picksPanelLabelEl.classList.toggle("needs-special", needsSpecial);
 
       picksListEl.textContent = "";
@@ -647,15 +645,15 @@
         name.className = "pick-row-name";
         name.innerHTML = `${teamBadge(team)}<span>${team}</span>`;
 
-        const starBtn = document.createElement("button");
-        starBtn.type = "button";
-        starBtn.className = "star-btn" + (isSpecial ? " active" : "");
-        starBtn.setAttribute("aria-pressed", String(isSpecial));
-        starBtn.setAttribute("aria-label", isSpecial ? `Remove ${team} as Locked Pick` : `Set ${team} as Locked Pick`);
-        starBtn.innerHTML = starIcon(isSpecial);
-        starBtn.addEventListener("click", () => toggleSpecial(currentWeek, team));
+        const lockBtn = document.createElement("button");
+        lockBtn.type = "button";
+        lockBtn.className = "lock-btn" + (isSpecial ? " active" : "");
+        lockBtn.setAttribute("aria-pressed", String(isSpecial));
+        lockBtn.setAttribute("aria-label", isSpecial ? `Remove ${team} as Locked Pick` : `Set ${team} as Locked Pick`);
+        lockBtn.innerHTML = lockIcon(isSpecial);
+        lockBtn.addEventListener("click", () => toggleSpecial(currentWeek, team));
 
-        li.append(name, starBtn);
+        li.append(name, lockBtn);
         picksListEl.appendChild(li);
       }
     }
@@ -684,7 +682,7 @@
         const isSpecial = team === special;
         btn.className = "team-btn" + (isSelected ? " selected" : "") + (isSpecial ? " special" : "");
         btn.disabled = !isSelected && (picks.length >= MAX_PICKS || picks.includes(opponent));
-        const icon = isSpecial ? starIcon(true, "mark") : CHECK_ICON;
+        const icon = isSpecial ? lockIcon(true, "mark") : CHECK_ICON;
         btn.innerHTML = `${icon}${teamBadge(team)}<span>${team}</span>`;
         btn.setAttribute("aria-pressed", String(isSelected));
         btn.addEventListener("click", () => toggleTeam(currentWeek, team));

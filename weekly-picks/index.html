@@ -551,7 +551,7 @@
   function buildMessage(week) {
     const { picks, special } = getWeekData(week);
     const info = SCHEDULE[week];
-    const lines = picks.map((t, i) => `${i + 1}. ${t}${t === special ? " ⭐ Star Pick" : ""}`);
+    const lines = picks.map((t, i) => `${i + 1}. ${t}${t === special ? " ⭐ Locked Pick" : ""}`);
     return [
       `🏈 Week ${week} Picks (${info.dates})`,
       ...lines
@@ -572,8 +572,8 @@
     if (picks.length > 0) {
       const needsSpecial = picks.length === MAX_PICKS && !special;
       picksPanelLabelEl.textContent = needsSpecial
-        ? "Tap ★ to choose your Star Pick"
-        : "Your picks — tap ★ to change your Star Pick";
+        ? "Tap ★ to choose your Locked Pick"
+        : "Your picks — tap ★ to change your Locked Pick";
       picksPanelLabelEl.classList.toggle("needs-special", needsSpecial);
 
       picksListEl.textContent = "";
@@ -590,7 +590,7 @@
         starBtn.type = "button";
         starBtn.className = "star-btn" + (isSpecial ? " active" : "");
         starBtn.setAttribute("aria-pressed", String(isSpecial));
-        starBtn.setAttribute("aria-label", isSpecial ? `Remove ${team} as Star Pick` : `Set ${team} as Star Pick`);
+        starBtn.setAttribute("aria-label", isSpecial ? `Remove ${team} as Locked Pick` : `Set ${team} as Locked Pick`);
         starBtn.innerHTML = starIcon(isSpecial);
         starBtn.addEventListener("click", () => toggleSpecial(currentWeek, team));
 

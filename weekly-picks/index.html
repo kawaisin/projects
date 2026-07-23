@@ -223,11 +223,29 @@
     background: var(--special-soft);
   }
   .pick-row-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-weight: 700;
     font-size: 0.88rem;
     color: var(--ink);
   }
   .pick-row.special .pick-row-name { color: var(--special); }
+
+  .team-badge {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
 
   .star-btn {
     flex-shrink: 0;
@@ -445,6 +463,49 @@
     18: { dates: "Jan 9–10",  games: [["Jets","Bills"],["Jaguars","Colts"],["Raiders","Chiefs"],["Titans","Texans"],["Chargers","Broncos"],["Dolphins","Patriots"],["Browns","Bengals"],["Steelers","Ravens"],["Bears","Vikings"],["Lions","Packers"],["Cowboys","Commanders"],["Buccaneers","Saints"],["Eagles","Giants"],["Seahawks","Rams"],["Falcons","Panthers"],["49ers","Cardinals"]] }
   };
 
+  const TEAM_INFO = {
+    "49ers":      { abbr: "SF",  color: "#AA0000" },
+    "Bears":      { abbr: "CHI", color: "#0B162A" },
+    "Bengals":    { abbr: "CIN", color: "#FB4F14" },
+    "Bills":      { abbr: "BUF", color: "#00338D" },
+    "Broncos":    { abbr: "DEN", color: "#FB4F14" },
+    "Browns":     { abbr: "CLE", color: "#472A08" },
+    "Buccaneers": { abbr: "TB",  color: "#D50A0A" },
+    "Cardinals":  { abbr: "ARI", color: "#97233F" },
+    "Chargers":   { abbr: "LAC", color: "#0080C6" },
+    "Chiefs":     { abbr: "KC",  color: "#E31837" },
+    "Colts":      { abbr: "IND", color: "#002C5F" },
+    "Commanders": { abbr: "WAS", color: "#5A1414" },
+    "Cowboys":    { abbr: "DAL", color: "#041E42" },
+    "Dolphins":   { abbr: "MIA", color: "#008E97" },
+    "Eagles":     { abbr: "PHI", color: "#004C54" },
+    "Falcons":    { abbr: "ATL", color: "#A71930" },
+    "Giants":     { abbr: "NYG", color: "#0B2265" },
+    "Jaguars":    { abbr: "JAX", color: "#101820" },
+    "Jets":       { abbr: "NYJ", color: "#125740" },
+    "Lions":      { abbr: "DET", color: "#0076B6" },
+    "Packers":    { abbr: "GB",  color: "#203731" },
+    "Panthers":   { abbr: "CAR", color: "#0085CA" },
+    "Patriots":   { abbr: "NE",  color: "#002244" },
+    "Raiders":    { abbr: "LV",  color: "#000000" },
+    "Rams":       { abbr: "LAR", color: "#003594" },
+    "Ravens":     { abbr: "BAL", color: "#241773" },
+    "Saints":     { abbr: "NO",  color: "#D3BC8D", text: "#101010" },
+    "Seahawks":   { abbr: "SEA", color: "#002244" },
+    "Steelers":   { abbr: "PIT", color: "#FFB612", text: "#101010" },
+    "Texans":     { abbr: "HOU", color: "#03202F" },
+    "Titans":     { abbr: "TEN", color: "#4B92DB" },
+    "Vikings":    { abbr: "MIN", color: "#4F2683" }
+  };
+
+  function teamBadge(team) {
+    const info = TEAM_INFO[team];
+    const color = info ? info.color : "#333333";
+    const text = info && info.text ? info.text : "#ffffff";
+    const abbr = info ? info.abbr : team.slice(0, 2).toUpperCase();
+    return `<span class="team-badge" style="background:${color};color:${text}">${abbr}</span>`;
+  }
+
   const STORAGE_KEY = "weekly-picks-v1";
   const MAX_PICKS = 4;
   const TOTAL_WEEKS = 18;
@@ -584,7 +645,7 @@
 
         const name = document.createElement("span");
         name.className = "pick-row-name";
-        name.textContent = team;
+        name.innerHTML = `${teamBadge(team)}<span>${team}</span>`;
 
         const starBtn = document.createElement("button");
         starBtn.type = "button";
@@ -624,7 +685,7 @@
         btn.className = "team-btn" + (isSelected ? " selected" : "") + (isSpecial ? " special" : "");
         btn.disabled = !isSelected && (picks.length >= MAX_PICKS || picks.includes(opponent));
         const icon = isSpecial ? starIcon(true, "mark") : CHECK_ICON;
-        btn.innerHTML = `${icon}<span>${team}</span>`;
+        btn.innerHTML = `${icon}${teamBadge(team)}<span>${team}</span>`;
         btn.setAttribute("aria-pressed", String(isSelected));
         btn.addEventListener("click", () => toggleTeam(currentWeek, team));
         return btn;
